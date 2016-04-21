@@ -78,3 +78,35 @@ Grand Total 	$172.30
 
 
 http://wasdkeyboards.tumblr.com/
+
+
+
+
+
+
+http://shop.keyboard.io/
+https://www.crowdsupply.com/ugl/ultimate-hacking-keyboard
+https://www.indiegogo.com/projects/ergodox-ez-an-incredible-mechanical-keyboard#/story
+http://electronics.stackexchange.com/questions/189790/determining-trackpoint-pinout
+https://geekhack.org/index.php?topic=55960.0a
+https://geekhack.org/index.php?topic=55960.0
+https://deskthority.net/workshop-f7/split-ergonomic-keyboard-project-t1753-990.html
+https://geekhack.org/index.php?topic=44831
+https://geekhack.org/index.php?topic=74223.msg1823267#msg1823267
+https://geekhack.org/index.php?action=profile;area=showposts;u=27281
+https://geekhack.org/index.php?topic=40567.200
+http://sprintek.com/products/sk8702.aspx
+5 keys for thumb:
+http://tomorrowlabs.blogspot.co.uk/2015/07/making-custom-keyboard-part-0.html
+Tilting:
+https://deskthority.net/workshop-f7/acidfire-s-custom-keyboard-aka-the-grand-piano-t6019.html
+http://www.keyboard-layout-editor.com/#/
+
+Mount dimensions:
+http://i.imgur.com/FeggbO6.png
+Mount rotation:
+https://geekhack.org/index.php?topic=64287.0
+
+Track/touch/flexpoint:
+https://geekhack.org/index.php?topic=55960.0
+https://github.com/mtl/tmk_keyboard/commit/06e052e0bd85a09a0291cc5a064bc0f3501952c8
