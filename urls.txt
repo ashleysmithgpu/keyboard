@@ -1,0 +1,80 @@
+http://yager.io/keyboard/keyboard.html
+https://github.com/wyager/MicroMechBoard
+http://ergodox.org/Default.aspx
+
+33 keys per side
+
+http://www.instructables.com/id/Led-Cube-8x8x8/step8/IO-port-expansion-more-multiplexing/
+http://electronics.stackexchange.com/questions/48572/creating-a-keyboard-with-a-microcontroller-do-i-need-an-input-pin-for-each-key0
+
+http://www.quotemypcb.co.uk/quotebuilder ~£200
+http://www.pcbtrain.co.uk/ ~£150
+http://www.multi-circuit-boards.eu/?_ga=1.132027020.2010249172.1414165854 ~€95 (~£75)
+http://quick-teck.co.uk/onlinequote/onlinequote.php ~£110
+http://be.eurocircuits.com/shop/orders/configurator.aspx ~€140 (~£110)
+
+https://www.pjrc.com/teensy/
+https://snootlab.com/order.php 3x teensy ~€70 (~£50)
+
+http://www.digikey.co.uk/product-search/en/switches/pushbutton-switches/1114209?k=cherry%20mx 66x switches ~£50
+http://www.wasdkeyboards.com/index.php/ 66x cherry mx reds: $66
+
+
+http://www.wasdkeyboards.com/index.php/products/blank-keycap-singles.html
+
+extra keys: 3
+row4: 6
+row3: 6
+row2: 6
+row1: 12
+
+~$100 (~£65)
+
+
+or
+
+ for switches+caps
+
+Row 3, Size 1x1 Cherry MX Keycap (R3 1x1)
+Keycap Color
+    6 x Black
+$1.00 		$6.00
+
+Row 2, Size 1x1 Cherry MX Keycap (R2 1x1)
+Keycap Color
+    6 x Black
+$1.00 		$6.00
+
+Row 1, Size 1x1 Cherry MX Keycap (R1 1x1)
+Keycap Color
+    36 x Black
+$1.00 		$36.00
+
+WASD Wire Keycap Puller Tool
+$6.00 		$6.00
+	
+Cherry MX Red Keyswitch - MX1A-L1NN (Linear) - PCB Mounted
+Switch Type
+    100 x PCB Mount
+$0.6 		$60.00
+
+58-Key Alphanumeric Cherry MX Keycap Set
+Keycap Color
+    White
+Keycap Compatibility
+    Switch | \ key to R1 1x1
+Layout
+    Centered
+$30.00 		$30.00
+
+Row 4, Size 1x1 Cherry MX Keycap (R4 1x1)
+Keycap Color
+    6 x Black
+$1.00 		$6.00
+
+Subtotal 	$150.00
+Shipping & Handling (USPS - First-Class Package International Service) 	$20.45
+Grand Total 	$172.30
+
+
+http://wasdkeyboards.tumblr.com/
