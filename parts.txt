@@ -1,0 +1,8 @@
+
+https://www.digikey.co.uk/product-search/en/kits/resistor-kits/2490615?k=rs125
+https://www.digikey.co.uk/product-detail/en/cui-inc/SJ-43514/CP-43514-ND/368146
+https://www.digikey.co.uk/product-search/en/discrete-semiconductor-products/diodes-rectifiers-single/1376383?k=1n4148tact&mnonly=0&newproducts=0&ColumnSort=0&page=1&quantity=0&ptm=0&fid=0&pageSize=25
+
+http://uk.farnell.com/pro-signal/av00262/lead-3-5mm-m-jack-jack-1-2m/dp/3712242
+http://uk.farnell.com/microchip/mcp23017-e-sp/ic-io-expander-16bit-i2c-28dip/dp/1332088
+
