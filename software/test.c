@@ -6,6 +6,7 @@
 
 #include "usb_keyboard.h"
 #include "usb_key_ids.h"
+#include "twi.h"
 
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
 
@@ -29,31 +30,52 @@ const uint8_t column_pin_numbers[] = {0,1,4,5,6,7};
 #define KEY_PRESSED 1
 #define KEY_RELEASED 0
 
+#define KEY_CUSTOM_FN_LEFT 200
+#define KEY_CUSTOM_FN_RIGHT 201
+
 #define NUM_FRAMES_TO_KEEP 2
 
-#define NUM_MODIFIER_KEYS_LEFT 5
-const uint8_t modifier_keys_indices_left[] = {1, 2, 21, 27, 28};
+#define NUM_MODIFIER_KEYS_LEFT 4
+const uint8_t modifier_keys_indices_left[] = {21, 28, 29, 30};
 
 uint16_t physical_key_to_hid_key_id_map_left [] = {
-	KEY_RESERVED, KEY_LEFT_GUI, KEY_RIGHT_ALT,
-	KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_MINUS,
-	KEY_LEFT_BRACE, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T,
-	KEY_HASH, KEY_A, KEY_S, KEY_D, KEY_F, KEY_G,
-	KEY_LEFT_SHIFT, KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B,
-	KEY_LEFT_CTRL, KEY_LEFT_ALT, KEY_RESERVED, KEY_TILDE, KEY_BACKSPACE, KEY_ENTER
+	KEY_NUM_LOCK, KEY_ESC, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5,
+	KEY_TAB, KEY_LEFT_BRACE, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T,
+	KEY_CAPS_LOCK, KEY_HASH, KEY_A, KEY_S, KEY_D, KEY_F, KEY_G,
+	KEY_LEFT_SHIFT, KEY_AMERICAN_BACKSLASH, KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B,
+	KEY_LEFT_CTRL, KEY_LEFT_GUI, KEY_LEFT_ALT, KEY_RESERVED, KEY_CUSTOM_LEFT_FN, KEY_ENTER, KEY_SPACE/*TODO: duplicate keys?*/
 };
 
-#define NUM_MODIFIER_KEYS_RIGHT 1
-const uint8_t modifier_keys_indices_right[] = {26};
+uint16_t physical_key_to_hid_key_id_map_left_fn [] = {
+	KEY_NUM_LOCK, KEY_ESC, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5,
+	KEY_TAB, KEY_LEFT_BRACE, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T,
+	KEY_CAPS_LOCK, KEY_HASH, KEY_HOME, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_END, KEY_G,
+	KEY_LEFT_SHIFT, KEY_AMERICAN_BACKSLASH, KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B,
+	KEY_LEFT_CTRL, KEY_LEFT_GUI, KEY_LEFT_ALT, KEY_RESERVED, KEY_CUSTOM_LEFT_FN, KEY_ENTER, KEY_SPACE/*TODO: duplicate keys?*/
+};
+
+#define NUM_MODIFIER_KEYS_RIGHT 4
+const uint8_t modifier_keys_indices_right[] = {27, 32, 33, 34};
 
 uint16_t physical_key_to_hid_key_id_map_right [] = {
-	KEY_MENU, KEY_INSERT, KEY_PRINTSCREEN,
-	KEY_EQUAL, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0,
-	KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_RIGHT_BRACE,
-	KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON, KEY_QUOTE,
-	KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RIGHT_SHIFT,
-	KEY_SPACE, KEY_DELTE, KEY_TAB, KEY_CAPS_LOCK, KEY_BACKSLASH, KEY_ESC
+	KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUAL,
+	KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_RIGHT_BRACE, KEY_DELETE,
+	KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON, KEY_QUOTE, KEY_ENTER/*TODO: duplicate keys?*/,
+	KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RESERVED/*TODO*/, KEY_RIGHT_SHIFT,
+	KEY_SPACE, KEY_BACKSPACE, KEY_CUSTOM_FN_RIGHT, KEY_RESERVED, KEY_RIGHT_ALT, KEY_RIGHT_GUI, KEY_RIGHT_CTRL
 };
+
+uint16_t physical_key_to_hid_key_id_map_right_fn [] = {
+	KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUAL,
+	KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_RIGHT_BRACE, KEY_INSERT,
+	KEY_LEFT, KEY_UP, KEY_DOWN, KEY_RIGHT, KEY_SEMICOLON, KEY_QUOTE, KEY_ENTER/*TODO: duplicate keys?*/,
+	KEY_N, KEY_M, KEY_COMMA, KEY_PERIOD, KEY_SLASH, KEY_RESERVED/*TODO*/, KEY_RIGHT_SHIFT,
+	KEY_SPACE, KEY_BACKSPACE, KEY_CUSTOM_FN_RIGHT, KEY_RESERVED, KEY_RIGHT_ALT, KEY_RIGHT_GUI, KEY_RIGHT_CTRL
+};
+
+bool running_as_master = false;
+bool running_as_slave = false;
+bool have_slave = false;
 
 inline void reset_keys_status(uint8_t * status) {
 
@@ -151,6 +173,7 @@ inline void append_modifier_keys_from_slaves(uint8_t modifier_keys) {
 
 inline void debounce_keys() {
 
+	// TODO
 }
 
 inline void set_keys_pressed_from_debounced_keys(const uint8_t * deltas, uint8_t * num_keys_pressed) {
@@ -241,6 +264,32 @@ void update_leds_from_usb_results() {
 	}
 }
 
+void twi_interrupt_slave_tx_event() {
+
+	// Called when we are a slave and the master is requesting a write
+	// TODO
+	if(valid_data_ready) {
+
+	} else {
+
+		uint8_t zeros[16] = {0};
+		twi_transmit(zeros, 16);
+	}
+}
+
+void twi_interrupt_slave_rx_event(uint8_t * buffer, int num_bytes) {
+
+	if(num_bytes != 16)
+		return;
+
+	if(buffer[0] == 'S')
+		// We are master
+		running_as_slave = true;
+
+	if(buffer[0] == 'L')
+		// Set led statuses
+}
+
 int main() {
 
 	uint8_t physical_key_status[NUM_FRAMES_TO_KEEP][NUM_TOTAL_KEYS];
@@ -266,7 +315,44 @@ int main() {
 	for(uint8_t i = 0; i < NUM_FRAMES_TO_KEEP; ++i)
 		reset_keys_status(physical_key_status[i]);
 
+	// Init usb
 	usb_init();
+
+	// Init i2c
+	twi_setAddress(1);
+	twi_attachSlaveTxEvent(twi_interrupt_slave_tx_event);
+	twi_attachSlaveRxEvent(twi_interrupt_slave_rx_event);
+	twi_init();
+
+	// Check if we are the master (connected by usb) or the slave (connected by i2c)
+	while(!running_as_master && !running_as_slave) {
+
+		running_as_master = usb_configured() > 0;
+	}
+
+	if(running_as_master) {
+
+		running_as_slave = false;
+
+		// Set i2c as master
+		twi_setAddress(0);
+
+		// Write slave init data
+		uint8_t data[16] = {'S'};
+		uint8_t result = twi_writeTo(1, data, 16, true, true);
+		have_slave = result == 0;
+	}
+
+	if(running_as_slave) {
+
+		running_as_master = false;
+
+		// Turn off usb
+		UDCON = 1 << DETACH;
+		USBCON = 1 << FRZCLK;
+		PLLCSR &= ~(1 << PLLE);
+		UHWCON &= ~(1 << UVREGE);
+	}
 
 	for(;;) {
 
