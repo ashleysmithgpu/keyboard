@@ -8,6 +8,10 @@
 #include "usb_key_ids.h"
 #include "twi.h"
 
+// Define one of these to determine which size we are running on
+#define LEFT_KEYBOARD
+//#define RIGHT_KEYBOARD
+
 #define CPU_PRESCALE(n) (CLKPR = 0x80, CLKPR = (n))
 
 #define LED_0 0
@@ -18,20 +22,24 @@
 uint8_t previous_led_values[NUM_LEDS] = {0, 0, 0};
 
 const uint8_t row_pin_numbers[] = {0,1,2,3,7};
-const uint8_t column_pin_numbers[] = {0,1,4,5,6,7};
+const uint8_t column_pin_numbers[] = {0,1,4,5,6,7,8};
 
 #define NUM_FUNCTION_KEYS 3
 #define NUM_MAIN_KEYS_ROWS 5
-#define NUM_MAIN_KEYS_COLS 6
+#define NUM_MAIN_KEYS_COLS 7
 #define NUM_PHYSICAL_KEYS (NUM_MAIN_KEYS_ROWS * NUM_MAIN_KEYS_COLS)
 #define NUM_TOTAL_KEYS (NUM_FUNCTION_KEYS + NUM_PHYSICAL_KEYS)
-#define MAX_NUM_DELTAS 6
+
+// TODO: this may be bigger if we change the usb protocol
+#define MAX_USB_NUM_KEYS_DOWN 6
 
 #define KEY_PRESSED 1
 #define KEY_RELEASED 0
 
 #define KEY_CUSTOM_FN_LEFT 200
 #define KEY_CUSTOM_FN_RIGHT 201
+#define KEY_INDEX_CUSTOM_FN_LEFT 32
+#define KEY_INDEX_CUSTOM_FN_RIGHT 30
 
 #define NUM_FRAMES_TO_KEEP 2
 
@@ -73,9 +81,40 @@ uint16_t physical_key_to_hid_key_id_map_right_fn [] = {
 	KEY_SPACE, KEY_BACKSPACE, KEY_CUSTOM_FN_RIGHT, KEY_RESERVED, KEY_RIGHT_ALT, KEY_RIGHT_GUI, KEY_RIGHT_CTRL
 };
 
+#if defined(LEFT_KEYBOARD)
+#define NUM_MODIFIER_KEYS NUM_MODIFIER_KEYS_LEFT
+#define KEY_CUSTOM_FN KEY_CUSTOM_FN_LEFT
+#define modifier_keys_indices modifier_keys_indices_left
+#define physical_key_to_hid_key_id_map physical_key_to_hid_key_id_map_left
+#define physical_key_to_hid_key_id_map_fn physical_key_to_hid_key_id_map_left_fn
+#else
+#define KEY_CUSTOM_FN KEY_CUSTOM_FN_RIGHT
+#define NUM_MODIFIER_KEYS NUM_MODIFIER_KEYS_RIGHT
+#define modifier_keys_indices modifier_keys_indices_right
+#define physical_key_to_hid_key_id_map_fn physical_key_to_hid_key_id_map_right_fn
+#endif
+
 bool running_as_master = false;
 bool running_as_slave = false;
 bool have_slave = false;
+
+uint8_t debounce_timers[NUM_TOTAL_KEYS];
+
+uint8_t DEBOUNCE_TIME = 100;
+
+uint8_t I2C_DATA_NUM_KEYS = 14;
+
+struct i2c_data_packet {
+	uint8_t modifiers;
+	bool fn_key;
+	uint8_t keys[I2C_DATA_NUM_KEYS];
+};
+
+uint8_t I2C_DATA_SIZE = 16;
+static_assert(sizeof(i2c_data_packet) == I2C_DATA_SIZE);
+
+struct i2c_data_packet outbound_i2c_data;
+bool valid_data_ready = false;
 
 inline void reset_keys_status(uint8_t * status) {
 
@@ -85,7 +124,7 @@ inline void reset_keys_status(uint8_t * status) {
 	}
 }
 
-inline void get_keys_status_from_hw(uint8_t * status) {
+inline void get_keys_status_from_hw_and_debounce(uint8_t * status, const uint8_t * previous_states) {
 
 	for(uint8_t row = 0; row < NUM_MAIN_KEYS_ROWS; ++row) {
 
@@ -99,109 +138,71 @@ inline void get_keys_status_from_hw(uint8_t * status) {
 
 			uint8_t button_number = NUM_FUNCTION_KEYS + row * NUM_MAIN_KEYS_COLS + col;
 
-			// Measure, zero means key pressed
-			status[button_number] = !(PINB & (1 << row_pin_numbers[row])) ? KEY_PRESSED : KEY_RELEASED;
+			// If we are not waiting, check button press and start the debounce timer if button changed
+			if(debounce_timers[button_number] == 0) {
+
+				// Measure, zero means key pressed
+				status[button_number] = !(PINB & (1 << row_pin_numbers[row])) ? KEY_PRESSED : KEY_RELEASED;
+
+				if(status[button_number] != previous_status[button_number]) {
+
+					debounce_timers[button_number] = DEBOUNCE_TIME;
+				}
+			}
 
 			DDRF &= ~(1 << column_pin_numbers[col]);
 		}
 
 		PORTB &= ~(1 << row_pin_numbers[row]);
 	}
-
-	// Pull up the 3 function button pins and check if they are pulled down
-	PORTB |= (1<<4);
-	PORTC |= (1<<7);
-	PORTD |= (1<<6);
-	if(!(PINB & (1<<4)))
-		status[2] = true;//button 3
-	if(!(PIND & (1<<6)))
-		status[1] = true;//button 2
-	if(!(PINC & (1<<7)))
-		status[0] = true;//button 1
-	//Now pull back down function buttons
-	PORTB &= ~(1<<4);
-	PORTC &= ~(1<<7);
-	PORTD &= ~(1<<6);
 }
 
-inline void get_key_deltas(const uint8_t * current_status, const uint8_t * previous_status, uint8_t * restrict deltas, uint8_t * restrict num_deltas) {
+inline void get_keys_down(const uint8_t * current_status, uint8_t * restrict keys_down, uint8_t * restrict num_keys_down, uint8_t * modifier_keys, bool * fn_key) {
 
-	assert(current_status != deltas);
-	assert(previous_status != deltas);
-	assert(num_deltas != deltas);
+	assert(current_status != keys_down);
+	assert(num_keys_down != keys_down);
 
-	*num_deltas = 0;
+	*modifier_keys = 0;
+
+	for(uint8_t i = 0; i < NUM_MODIFIER_KEYS; ++i) {
+		modifier_keys |= current_status[modifier_keys_indices[i]];
+	}
+
+	*fn_key = current_status[KEY_INDEX_CUSTOM_FN] == KEY_PRESSED;
+
+	*num_keys_down = 0;
 
 	for(uint8_t i = 0; i < NUM_TOTAL_KEYS; ++i) {
 
-		if(current_status[i] != previous_status[i]) {
+		for(uint8_t j = 0; j < NUM_MODIFIER_KEYS; ++j)
+			if(modifier_keys_indices[i] == i)
+				continue;
 
-			if(*num_deltas < MAX_NUM_DELTAS - 1) {
+		if(current_status[i] == KEY_PRESSED && *num_keys_down < MAX_NUM_KEYS_DOWN - 1) {
 
-				deltas[num_deltas] = i;
+			keys_down[num_keys_down] = i;
 
-				num_deltas++;
-			} else {
+			num_keys_down++;
+		} else {
 
-				// TODO: do something?
-			}
+			// TODO: do something?
 		}
 	}
 }
 
+inline uint8_t usb_key_id_from_index_side_fn(uint8_t key_id, uint8_t side, bool fn_key) {
 
-inline void set_modifier_keys_from_physical_keys(const uint8_t * physical_keys_left) {
-
-	uint8_t temp_modifier_keys = 0;
-
-	if(physical_keys_left) {
-
-		for(uint8_t i = 0; i < NUM_MODIFIER_KEYS_LEFT; ++i) {
-
-			temp_modifier_keys |= physical_keys_left[modifier_keys_indices_left[i]];
-		}
-	}
-
-	// The USB interrupts will read this
-	keyboard_modifier_keys = temp_modifier_keys;
+	return (side == 0 ?
+		(fn_key ? physical_key_to_hid_key_id_map_left_fn : physical_key_to_hid_key_id_map_left) :
+		(fn_key ? physical_key_to_hid_key_id_map_right_fn : physical_key_to_hid_key_id_map_right);
 }
 
-inline void append_modifier_keys_from_slaves(uint8_t modifier_keys) {
-
-	keyboard_modifier_keys |= modifier_keys;
-}
-
-inline void debounce_keys() {
-
-	// TODO
-}
-
-inline void set_keys_pressed_from_debounced_keys(const uint8_t * deltas, uint8_t * num_keys_pressed) {
-
-	assert(deltas != 0);
-	assert(num_keys_pressed != 0);
-
-	*num_keys_pressed = 0;
-
-	for(uint8_t i = 0; i < MAX_NUM_DELTAS; ++i) {
-
-		keyboard_keys[i] = 0;
-	}
+inline void debounce_tick() {
 
 	for(uint8_t i = 0; i < NUM_TOTAL_KEYS; ++i) {
 
-		if(!is_left_modifier_key(i)) {
-
-			if(num_keys_pressed < MAX_NUM_DELTAS - 1) {
-
-				keyboard_keys[*num_keys_pressed] = physical_keys[i];
-
-				*num_keys_pressed++;
-			} else {
-
-				// ?
-			}
-		}
+		if(debounce_timers[i] > 0)
+			debounce_timers[i]--;
 	}
 }
 
@@ -270,16 +271,18 @@ void twi_interrupt_slave_tx_event() {
 	// TODO
 	if(valid_data_ready) {
 
+		twi_transmit(&outbound_i2c_data, I2C_DATA_SIZE);
+		valid_data_ready = false;
 	} else {
 
-		uint8_t zeros[16] = {0};
-		twi_transmit(zeros, 16);
+		uint8_t zeros[I2C_DATA_SIZE] = {0};
+		twi_transmit(zeros, I2C_DATA_SIZE);
 	}
 }
 
 void twi_interrupt_slave_rx_event(uint8_t * buffer, int num_bytes) {
 
-	if(num_bytes != 16)
+	if(num_bytes != I2C_DATA_SIZE)
 		return;
 
 	if(buffer[0] == 'S')
@@ -294,9 +297,9 @@ int main() {
 
 	uint8_t physical_key_status[NUM_FRAMES_TO_KEEP][NUM_TOTAL_KEYS];
 	uint8_t current_status = 0;
-	uint8_t key_deltas[NUM_TOTAL_KEYS];
-	uint8_t num_deltas = 0;
-	uint8_t num_keys_pressed = 0;
+	uint8_t previous_status = 0;
+	uint8_t keys_down[NUM_TOTAL_KEYS];
+	uint8_t num_keys_down = 0;
 
 	CPU_PRESCALE(0);
 
@@ -314,6 +317,8 @@ int main() {
 
 	for(uint8_t i = 0; i < NUM_FRAMES_TO_KEEP; ++i)
 		reset_keys_status(physical_key_status[i]);
+
+	reset_keys_status(debounce_timers);
 
 	// Init usb
 	usb_init();
@@ -338,8 +343,8 @@ int main() {
 		twi_setAddress(0);
 
 		// Write slave init data
-		uint8_t data[16] = {'S'};
-		uint8_t result = twi_writeTo(1, data, 16, true, true);
+		uint8_t data[I2C_DATA_SIZE] = {'S'};
+		uint8_t result = twi_writeTo(1, data, I2C_DATA_SIZE, true, true);
 		have_slave = result == 0;
 	}
 
@@ -354,21 +359,82 @@ int main() {
 		UHWCON &= ~(1 << UVREGE);
 	}
 
+	uint8_t num_slave_keys_pressed = 0;
+	uint8_t slave_keys_pressed[I2C_DATA_SIZE];
+	uint8_t modifier_keys = 0;
+	uint8_t slave_modifier_keys = 0;
+	bool any_fn_key_pressed = false;
+
 	for(;;) {
 
-		get_keys_status_from_hw(physical_key_status[current_status]);
+		debounce_tick();
 
-		get_key_deltas(physical_key_status[current_status], physical_key_status[(current_status - 1) % NUM_FRAMES_TO_KEEP], physical_key_deltas, &num_deltas);
+		get_keys_status_from_hw_and_debounce(physical_key_status[current_status], physical_key_status[previous_status]);
 
-		set_modifier_keys_from_physical_keys(physical_key_status[current_status]);
+		get_keys_down(physical_key_status[current_status], physical_key_status[previous_status], physical_keys_down, &num_keys_down, &modifier_keys, &any_fn_key_pressed);
 
-		// TODO
-		append_modifier_keys_from_slaves(0);
+		if(running_as_slave) {
 
-		set_keys_pressed_from_physical_keys(physical_key_status, &num_keys_pressed);
+			outbound_i2c_data.fn_key = any_fn_key_pressed;
+			outbound_i2c_data.modifiers = mofifier_keys;
+			for(uint8_t i = 0; i < I2C_DATA_NUM_KEYS; ++i)
+				outbound_i2c_data.keys = 0;
+
+			// TODO: discard for now
+			if(num_keys_down > I2C_DATA_NUM_KEYS)
+				num_keys_down = I2C_DATA_NUM_KEYS;
+			assert(num_keys_down <= I2C_DATA_NUM_KEYS);
+
+			outbound_i2c_data[0] = modifier_keys;
+			for(uint8_t i = 0; i < num_keys_down; ++i)
+				outbound_i2c_data.keys[i] = physical_keys_down[i] + 1;
+
+			valid_data_ready = true;
+
+		} else {
+
+			struct i2c_data_packet data;
+			twi_readFrom(1, data, I2C_DATA_SIZE, true);
+
+			num_slave_keys_pressed = 0;
+
+			slave_modifier_keys = data.modifiers;
+			any_fn_key_pressed |= data.fn_key;
+
+			for(uint8_t i = 0; i < I2C_DATA_NUM_KEYS; ++i) {
+
+				if(data[i] > 0) {
+
+					slave_keys_pressed[i] = data[i] - 1;
+					num_slave_keys_pressed++;
+				}
+			}
+
+			// TODO: discard for now
+			if(num_keys_down > MAX_USB_NUM_KEYS_DOWN)
+				num_keys_down = MAX_USB_NUM_KEYS_DOWN;
+			assert(num_keys_down <= MAX_USB_NUM_KEYS_DOWN);
+
+			uint8_t i = 0;
+			for(i = 0; i < num_keys_down; ++i) {
+
+				// This variable is passed to the usb controller directly
+				keyboard_keys[i] = usb_key_id_from_index_side_fn(physical_keys_down[i], 0, any_fn_key_pressed);
+			}
+
+			for(i = 0; i < MAX_USB_NUM_KEYS_DOWN; ++i) {
+
+				// This variable is passed to the usb controller directly
+				keyboard_keys[i] = usb_key_id_from_index_side_fn(slave_keys_pressed[i], 1, any_fn_key_pressed);
+			}
+
+			// This variable is passed to the usb controller directly
+			keyboard_modifier_keys = modifier_keys | slave_modifier_keys;
+		}
 
 		update_leds_from_usb_results();
 
+		previous_status = current_status;
 		current_status = (current_status + 1) % NUM_FRAMES_TO_KEEP;
 	}
 
