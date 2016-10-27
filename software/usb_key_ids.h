@@ -11,6 +11,12 @@
 #define KEY_RIGHT_ALT	0x40
 #define KEY_RIGHT_GUI	0x80
 
+#define LED_NUM_LOCK 1
+#define LED_CAPS_LOCK 2
+#define LED_SCROLL_LOCK 4
+#define LED_COMPOSE 8
+#define LED_KANA 16
+
 #define KEY_RESERVED 0
 #define KEY_A		4
 #define KEY_B		5
