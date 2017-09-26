@@ -1,0 +1,220 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:kailh
+LIBS:connectors
+LIBS:kb-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L PG135001D01 SWX1Y1
+U 1 1 59BFDE75
+P 5150 3600
+F 0 "SWX1Y1" H 5150 3500 60  0000 C CNN
+F 1 "PG135001D01" H 5150 3700 60  0000 C CNN
+F 2 "PG135001D01:PG135001D01" H 5150 3700 60  0001 C CNN
+F 3 "" H 5150 3700 60  0000 C CNN
+	1    5150 3600
+	1    0    0    -1  
+$EndComp
+$Comp
+L PG135001D01 SWX1Y2
+U 1 1 59BFE0AE
+P 5150 4200
+F 0 "SWX1Y2" H 5150 4100 60  0000 C CNN
+F 1 "PG135001D01" H 5150 4300 60  0000 C CNN
+F 2 "PG135001D01:PG135001D01" H 5150 4300 60  0001 C CNN
+F 3 "" H 5150 4300 60  0000 C CNN
+	1    5150 4200
+	1    0    0    -1  
+$EndComp
+$Comp
+L D DX2Y1
+U 1 1 59BFEC54
+P 6000 3900
+F 0 "DX2Y1" H 6000 4000 50  0000 C CNN
+F 1 "D" H 6000 3800 50  0000 C CNN
+F 2 "Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10" H 6000 3900 50  0001 C CNN
+F 3 "" H 6000 3900 50  0000 C CNN
+	1    6000 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L D DX1Y1
+U 1 1 59BFED5E
+P 5100 3900
+F 0 "DX1Y1" H 5100 4000 50  0000 C CNN
+F 1 "D" H 5100 3800 50  0000 C CNN
+F 2 "Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10" H 5100 3900 50  0001 C CNN
+F 3 "" H 5100 3900 50  0000 C CNN
+	1    5100 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L D DX2Y2
+U 1 1 59BFEDB5
+P 6000 4500
+F 0 "DX2Y2" H 6000 4600 50  0000 C CNN
+F 1 "D" H 6000 4400 50  0000 C CNN
+F 2 "Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10" H 6000 4500 50  0001 C CNN
+F 3 "" H 6000 4500 50  0000 C CNN
+	1    6000 4500
+	1    0    0    -1  
+$EndComp
+$Comp
+L D DX1Y2
+U 1 1 59BFEE00
+P 5100 4500
+F 0 "DX1Y2" H 5100 4600 50  0000 C CNN
+F 1 "D" H 5100 4400 50  0000 C CNN
+F 2 "Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10" H 5100 4500 50  0001 C CNN
+F 3 "" H 5100 4500 50  0000 C CNN
+	1    5100 4500
+	1    0    0    -1  
+$EndComp
+$Comp
+L PG135001D01 SWX2Y1
+U 1 1 59BFEE93
+P 6050 3600
+F 0 "SWX2Y1" H 6050 3500 60  0000 C CNN
+F 1 "PG135001D01" H 6050 3700 60  0000 C CNN
+F 2 "PG135001D01:PG135001D01" H 6050 3700 60  0001 C CNN
+F 3 "" H 6050 3700 60  0000 C CNN
+	1    6050 3600
+	1    0    0    -1  
+$EndComp
+$Comp
+L PG135001D01 SWX2Y2
+U 1 1 59BFEF02
+P 6050 4200
+F 0 "SWX2Y2" H 6050 4100 60  0000 C CNN
+F 1 "PG135001D01" H 6050 4300 60  0000 C CNN
+F 2 "PG135001D01:PG135001D01" H 6050 4300 60  0001 C CNN
+F 3 "" H 6050 4300 60  0000 C CNN
+	1    6050 4200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5700 3300 5700 4200
+Wire Wire Line
+	4800 3300 4800 4200
+Connection ~ 5700 3600
+Connection ~ 4800 3600
+Wire Wire Line
+	4950 3900 4400 3900
+Wire Wire Line
+	4950 4500 4400 4500
+Wire Wire Line
+	4900 3900 4900 4000
+Wire Wire Line
+	4900 4000 5850 4000
+Wire Wire Line
+	5850 4000 5850 3900
+Connection ~ 4900 3900
+Wire Wire Line
+	4900 4500 4900 4650
+Wire Wire Line
+	4900 4650 5850 4650
+Wire Wire Line
+	5850 4650 5850 4500
+Connection ~ 4900 4500
+Wire Wire Line
+	5500 4200 5500 4500
+Wire Wire Line
+	5500 4500 5250 4500
+Wire Wire Line
+	5500 3600 5500 3900
+Wire Wire Line
+	5500 3900 5250 3900
+Wire Wire Line
+	6400 3600 6400 3900
+Wire Wire Line
+	6400 3900 6150 3900
+Wire Wire Line
+	6400 4200 6400 4500
+Wire Wire Line
+	6400 4500 6150 4500
+$Comp
+L TEST_1P X1
+U 1 1 59C00707
+P 4800 3300
+F 0 "X1" H 4800 3570 50  0000 C CNN
+F 1 "X1" H 4800 3500 50  0000 C CNN
+F 2 "Wire_Pads:SolderWirePad_single_0-8mmDrill" H 5000 3300 50  0001 C CNN
+F 3 "" H 5000 3300 50  0000 C CNN
+	1    4800 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L TEST_1P X2
+U 1 1 59C00970
+P 5700 3300
+F 0 "X2" H 5700 3570 50  0000 C CNN
+F 1 "X2" H 5700 3500 50  0000 C CNN
+F 2 "Wire_Pads:SolderWirePad_single_0-8mmDrill" H 5900 3300 50  0001 C CNN
+F 3 "" H 5900 3300 50  0000 C CNN
+	1    5700 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L TEST_1P Y1
+U 1 1 59C009F3
+P 4400 3900
+F 0 "Y1" H 4400 4170 50  0000 C CNN
+F 1 "Y1" H 4400 4100 50  0000 C CNN
+F 2 "Wire_Pads:SolderWirePad_single_0-8mmDrill" H 4600 3900 50  0001 C CNN
+F 3 "" H 4600 3900 50  0000 C CNN
+	1    4400 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L TEST_1P Y2
+U 1 1 59C00A8D
+P 4400 4500
+F 0 "Y2" H 4400 4770 50  0000 C CNN
+F 1 "Y2" H 4400 4700 50  0000 C CNN
+F 2 "Wire_Pads:SolderWirePad_single_0-8mmDrill" H 4600 4500 50  0001 C CNN
+F 3 "" H 4600 4500 50  0000 C CNN
+	1    4400 4500
+	1    0    0    -1  
+$EndComp
+$EndSCHEMATC
