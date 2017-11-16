@@ -110,3 +110,17 @@ https://geekhack.org/index.php?topic=64287.0
 Track/touch/flexpoint:
 https://geekhack.org/index.php?topic=55960.0
 https://github.com/mtl/tmk_keyboard/commit/06e052e0bd85a09a0291cc5a064bc0f3501952c8
+
+
+
+
+
+
+
+
+
+atmega:
+https://www.build-electronic-circuits.com/microcontroller-tutorial-part5/
+low profile:
+https://deskthority.net/product-news-f44/kailh-cherry-ml-inspired-low-profile-switches-t13734-150.html
+
