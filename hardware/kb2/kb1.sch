@@ -605,7 +605,7 @@ Wire Wire Line
 Wire Wire Line
 	5150 2050 5150 2150
 Wire Wire Line
-	5150 2150 10950 2150
+	2000 2150 10950 2150
 Wire Wire Line
 	8400 2150 8400 2050
 Wire Wire Line
@@ -862,8 +862,6 @@ Wire Wire Line
 	9250 5750 9000 5750
 Wire Wire Line
 	9250 -150 9250 5750
-Wire Wire Line
-	2000 1950 2000 6000
 Connection ~ 2000 5400
 Connection ~ 2000 5050
 Connection ~ 2000 4700
@@ -961,7 +959,7 @@ Wire Wire Line
 Wire Wire Line
 	8000 1500 8600 1500
 Wire Wire Line
-	8600 1500 8600 1950
+	8600 1950 8600 1500
 Wire Wire Line
 	3850 1450 3750 1450
 Wire Wire Line
@@ -989,7 +987,6 @@ Wire Wire Line
 	7200 -1250 2950 -1250
 Wire Wire Line
 	2950 -1250 2950 1950
-Connection ~ 2950 1950
 $Comp
 L USB_B_Micro J1
 U 1 1 5A11E809
@@ -1171,11 +1168,17 @@ Wire Wire Line
 Wire Wire Line
 	5300 -50  9050 -50 
 Wire Wire Line
-	8600 1950 2000 1950
-Wire Wire Line
 	6700 -500 6700 1200
 Connection ~ 6700 1200
 Wire Wire Line
 	6600 -500 6600 1250
 Connection ~ 6600 1250
+Wire Wire Line
+	6900 -500 6900 1350
+Connection ~ 6900 1350
+Connection ~ 5150 2150
+Wire Wire Line
+	2000 2150 2000 6000
+Wire Wire Line
+	2950 1950 8600 1950
 $EndSCHEMATC
